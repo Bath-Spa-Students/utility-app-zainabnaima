@@ -4,7 +4,7 @@ from tkinter import simpledialog, messagebox
 class VendingMachine:
     def __init__(self, root):
         self.root = root
-        self.root.title("Cool Vending Machine")
+        self.root.title("Smart Vending Machine")
         self.root.geometry("1200x800")
         self.cart = []
         self.total_amount = 0
