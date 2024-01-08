@@ -4,7 +4,7 @@ from tkinter import simpledialog, messagebox
 class VendingMachine:
     def __init__(self, root):
         self.root = root
-        self.root.title("Smart Vending Machine")
+        self.root.title("Cool Vending Machine")
         self.root.geometry("1200x800")
         self.cart = []
         self.total_amount = 0
@@ -14,9 +14,9 @@ class VendingMachine:
             "Beverages": {"Iced Tea": ("$1.75", 12), "Coffee": ("$2.50", 8), "Soda": ("$1.25", 15),
                           "Juice": ("$2.00", 10), "Water": ("$1.00", 20)},
             "Candy": {"M&Ms": ("$1.75", 10), "Twix": ("$2.00", 8), "Snickers": ("$1.50", 12),
-                      "Skittles": ("$1.50", 10), "Gummy Bears": ("$1.25", 15)},
+                      "Skittles": ("$1.50", 10), "Gummy Bears": ("$1.25", 2)},
             "Microwavable Meals": {"Mac 'n Cheese": ("$2.50", 8), "Frozen Pizza": ("$4.00", 6),
-                                   "Instant Ramen": ("$3.00", 5), "Chicken Nuggets": ("$3.50", 7),
+                                   "Instant Ramen": ("$3.00", 2), "Chicken Nuggets": ("$3.50", 7),
                                    "Hot Pockets": ("$2.75", 10)},
             "Desserts": {"Ice Cream Sandwich": ("$2.50", 8), "Brownies": ("$2.00", 10),
                          "Cheesecake": ("$3.00", 7), "Cupcakes": ("$2.25", 10), "Cookies": ("$1.75", 12)},
@@ -53,7 +53,8 @@ class VendingMachine:
         self.clear_screen()
 
         # Display category title
-        tk.Label(self.root, text=f"Select {self.selected_category}", font=("Verdana", 32, "bold"), bg='#34495e', fg='#ecf0f1').pack(pady=20)
+        tk.Label(self.root, text=f"Select {self.selected_category}", font=("Verdana", 32, "bold"), bg='#34495e', 
+                 fg='#ecf0f1').pack(pady=20)
 
         # Display buttons for each item in the category
         for item, (price, quantity) in self.items[self.selected_category].items():
@@ -62,25 +63,35 @@ class VendingMachine:
                       bg='#2c3e50', fg='#ecf0f1', font=("Verdana", 16)).pack(pady=18)
 
     def add_to_cart(self, item, price, quantity):
+        # Decrease the quantity by one
+        quantity -= 1
+
         # Update the cart based on user selection
-        for i, (cart_item, _, cart_quantity) in enumerate(self.cart):
-            if cart_item == item:
-                # If the item is already in the cart, increase the quantity
-                self.cart[i] = (item, price, cart_quantity + 1)
-                messagebox.showinfo("Vending Machine", f"{item} quantity increased in the cart.")
-                break
-        else:
-            # If the item is not in the cart, add it
-            self.cart.append((item, price, 1))
-            messagebox.showinfo("Vending Machine", f"{item} added to the cart.")
+        if quantity >= 0:
+            for i, (cart_item, _, cart_quantity) in enumerate(self.cart):
+                if cart_item == item:
+                    # If the item is already in the cart, increase the quantity
+                    self.cart[i] = (item, price, cart_quantity + 1)
+                    messagebox.showinfo("Vending Machine", f"{item} item added to the cart.")
+                    break
+            else:
+                # If the item is not in the cart, add it
+                self.cart.append((item, price, 1))
+                messagebox.showinfo("Vending Machine", f"{item} added to the cart.")
 
             # Decrease the quantity in stock by one
             self.decrease_stock(item)
 
-        # Decrease the quantity by one
-        quantity -= 1
-
-        if quantity > 0:
+        if quantity <= 0:
+            # If the item is out of stock after the user's selection, show a message
+            messagebox.showinfo("Vending Machine", "This item is out of stock.")
+            response = messagebox.askquestion("Vending Machine", "Do you want anything else?")
+            if response == 'yes':
+                self.create_category_page()
+            else:
+                self.show_cart_page()
+        else:
+            # If quantity is greater than 0, ask if the user wants more items
             response = messagebox.askquestion("Vending Machine", "Do you want anything else?")
             if response == 'yes':
                 # If the user wants more items, go back to category selection
@@ -88,10 +99,9 @@ class VendingMachine:
             else:
                 # If not, show the cart page
                 self.show_cart_page()
-        else:
-            # If the item is out of stock, show a message and go back to category selection
-            messagebox.showinfo("Vending Machine", "Sorry, this item is out of stock.")
-            self.create_category_page()
+
+        # Update the quantity in the items dictionary
+        self.items[self.selected_category][item] = (price, quantity)
 
     def show_cart_page(self):
         # Clear the screen
